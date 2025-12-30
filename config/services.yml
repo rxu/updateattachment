@@ -8,6 +8,6 @@ services:
             - '@template'
             - '@request'
             - '@user'
+            - '@attachment.manager'
         tags:
             - { name: event.listener }
- 

@@ -34,6 +34,9 @@ class listener implements EventSubscriberInterface
 	/** @var \phpbb\user */
 	protected $user;
 
+	/** @var \phpbb\attachment\manager */
+	protected $attachment_manager;
+
 	protected $sql_ary;
 
 	public function __construct(\phpbb\auth\auth $auth,
@@ -41,7 +44,8 @@ class listener implements EventSubscriberInterface
 								\phpbb\db\driver\driver_interface $db,
 								\phpbb\template\template $template,
 								\phpbb\request\request $request,
-								\phpbb\user $user)
+								\phpbb\user $user,
+								\phpbb\attachment\manager $attachment_manager)
 	{
 		$this->auth = $auth;
 		$this->config = $config;
@@ -49,6 +53,7 @@ class listener implements EventSubscriberInterface
 		$this->template = $template;
 		$this->request = $request;
 		$this->user = $user;
+		$this->attachment_manager = $attachment_manager;
 	}
 
 	static public function getSubscribedEvents()
@@ -90,15 +95,11 @@ class listener implements EventSubscriberInterface
 			{
 				$this->db->sql_query('UPDATE ' . ATTACHMENTS_TABLE . ' SET ' . $this->db->sql_build_array('UPDATE', $sql_ary) . ' WHERE attach_id = ' . $attach_id_old );
 
-				//Delete old file
-				global $phpbb_container;
-				/** @var \phpbb\attachment\manager $attachment_manager */
-				$attachment_manager = $phpbb_container->get('attachment.manager');
-				$attachment_manager->unlink($row['physical_filename'], 'file', false);
+				$this->attachment_manager->unlink($row['physical_filename'], 'file', false);
 
 				if ($row['thumbnail'])
 				{
-					$attachment_manager->unlink($row['physical_filename'], 'thumbnail', false);
+					$this->attachment_manager->unlink($row['physical_filename'], 'thumbnail', false);
 				}
 
 				if (!$row['is_orphan'])
